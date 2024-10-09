@@ -1,3 +1,21 @@
+// Wait for the DOM to fully load before executing any script that depends on it
+document.addEventListener("DOMContentLoaded", () => {
+    const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
+
+    // Check if the canvas element is found
+    if (!canvas) {
+        console.error("Canvas element not found!");
+        return; // Exit if canvas is not found
+    }
+
+    // Initialize the Babylon.js engine with the canvas
+    const engine = new BABYLON.Engine(canvas, true);
+
+    // Call the CreateScene method to set up the scene
+    Playground.CreateScene(engine, canvas);
+});
+
+// Your Playground class definition goes here
 class Playground {
     public static CreateScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON.Scene {
         // This creates a basic Babylon Scene object (non-mesh)
@@ -71,7 +89,7 @@ class Playground {
             const barWidth = canvas.width / freqData.length;
             for (let i = 0; i < freqData.length; i++) {
                 const barHeight = freqData[i]; // Use frequency data to determine bar height
-                ctx.fillStyle = `rgb(${barHeight}, 50, 100)`; // Example color
+                ctx.fillStyle = `rgb(${Math.abs(barHeight) * 2}, 50, 100)`; // Example color
                 ctx.fillRect(i * barWidth, canvas.height - barHeight, barWidth, barHeight); // Draw bar
             }
         }
@@ -82,8 +100,9 @@ class Playground {
         return scene;
     }
 }
+
+// Declaration for dat variable
 declare var dat: any;
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+// Export the Playground class
 export { Playground };
