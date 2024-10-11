@@ -1,4 +1,3 @@
-// Wait for the DOM to fully load before executing any script that depends on it
 document.addEventListener("DOMContentLoaded", () => {
     const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
 
@@ -25,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// Your Playground class definition goes here
+
 class Playground {
     public static CreateScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON.Scene {
         // This creates a basic Babylon Scene object (non-mesh)
@@ -101,7 +100,7 @@ class Playground {
             const barWidth = canvas.width / freqData.length;
             for (let i = 0; i < freqData.length; i++) {
                 const barHeight = (freqData[i] + 140) * 2; // Adjust to make the bars visible
-                ctx.fillStyle = `rgb(${Math.abs(barHeight)}, 50, 100)`; // Example color
+                ctx.fillStyle = `rgb(${Math.abs(barHeight)}, 50, 100)`; // Example color should be okay for now
                 ctx.fillRect(i * barWidth, canvas.height - barHeight, barWidth, barHeight); // Draw bar
             }
 
