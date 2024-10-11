@@ -5,8 +5,23 @@ import { Playground } from "./playground";
     const engine = new BABYLON.Engine(canvas, true);
     const scene = Playground.CreateScene(engine, canvas);
 
-    window.addEventListener("resize", () => {
-        engine.resize();
+    window.addEventListener("DOMContentLoaded", () => {
+        const canvas = <HTMLCanvasElement>document.getElementById("renderCanvas");
+        if (!canvas) {
+            console.error("Canvas element not found");
+            return;
+        }
+
+        const engine = new BABYLON.Engine(canvas, true);
+        const scene = Playground.CreateScene(engine, canvas);
+
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
     });
 
     engine.runRenderLoop(() => {

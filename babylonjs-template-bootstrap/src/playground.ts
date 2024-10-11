@@ -1,3 +1,31 @@
+// Wait for the DOM to fully load before executing any script that depends on it
+document.addEventListener("DOMContentLoaded", () => {
+    const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
+
+    // Check if the canvas element is found
+    if (!canvas) {
+        console.error("Canvas element not found!");
+        return; // Exit if canvas is not found
+    }
+
+    // Initialize the Babylon.js engine with the canvas
+    const engine = new BABYLON.Engine(canvas, true);
+
+    // Call the CreateScene method to set up the scene and start rendering
+    const scene = Playground.CreateScene(engine, canvas);
+
+    // Register a render loop to repeatedly render the scene
+    engine.runRenderLoop(() => {
+        scene.render();
+    });
+
+    // Watch for browser/canvas resize events
+    window.addEventListener("resize", () => {
+        engine.resize();
+    });
+});
+
+// Your Playground class definition goes here
 class Playground {
     public static CreateScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON.Scene {
         // This creates a basic Babylon Scene object (non-mesh)
@@ -5,6 +33,7 @@ class Playground {
 
         // This creates and positions an arc-rotate camera (non-mesh)
         var camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2.5, 10, BABYLON.Vector3.Zero(), scene);
+        camera.attachControl(canvas, true);
 
         // Get the Babylon.js audio engine, audio context, and master gain node.
         const audioEngine = BABYLON.Engine.audioEngine!;
@@ -37,31 +66,32 @@ class Playground {
         // Toggle the audio engine lock on user interaction.
         document.addEventListener("click", () => {
             if (audioContext.state === "suspended") {
-                audioContext.resume();
+                audioContext.resume().then(() => console.log("Audio context resumed"));
             } else if (audioContext.state === "running") {
-                audioContext.suspend();
+                audioContext.suspend().then(() => console.log("Audio context suspended"));
             }
         });
 
-        // Add analyzer node.
+        // Add analyzer node and connect it to the end of the audio graph.
         const analyzer = new AnalyserNode(audioContext);
+        masterGainNode.connect(analyzer);
+
         const freqData = new Float32Array(analyzer.frequencyBinCount);
 
-        // Get the 2D drawing context from the canvas.
-        const ctx = canvas.getContext("2d");
+        // Create fullscreen dynamic texture for visualization
+        const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("AudioImageTexture");
+        const ctx = advancedTexture.getContext();
 
         // Function to draw the frequency data
-        function draw() {
-            requestAnimationFrame(draw);
+        scene.onAfterRenderObservable.add(() => {
+            // Get updated frequency data
+            analyzer.getFloatFrequencyData(freqData);
 
             // Check if ctx is not null before using it
             if (!ctx) {
                 console.error("Canvas context is null.");
                 return;
             }
-
-            // Get updated frequency data
-            analyzer.getFloatFrequencyData(freqData);
 
             // Clear the canvas and draw the frequency data
             ctx.fillStyle = "#111";
@@ -70,20 +100,21 @@ class Playground {
             // You can visualize the frequency data here (draw bars, lines, etc.)
             const barWidth = canvas.width / freqData.length;
             for (let i = 0; i < freqData.length; i++) {
-                const barHeight = freqData[i]; // Use frequency data to determine bar height
-                ctx.fillStyle = `rgb(${barHeight}, 50, 100)`; // Example color
+                const barHeight = (freqData[i] + 140) * 2; // Adjust to make the bars visible
+                ctx.fillStyle = `rgb(${Math.abs(barHeight)}, 50, 100)`; // Example color
                 ctx.fillRect(i * barWidth, canvas.height - barHeight, barWidth, barHeight); // Draw bar
             }
-        }
 
-        // Start the drawing loop
-        draw();
+            // Update the texture
+            advancedTexture.update();
+        });
 
         return scene;
     }
 }
+
+// Declaration for dat variable
 declare var dat: any;
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+// Export the Playground class
 export { Playground };
